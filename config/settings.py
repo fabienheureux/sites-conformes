@@ -22,6 +22,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Cache-Control default for all served media files.
+# Used by S3 object_parameters, db_storage view, and backfill command.
+# Override per-deployment via the MEDIA_CACHE_CONTROL env var.
+MEDIA_CACHE_CONTROL = os.getenv("MEDIA_CACHE_CONTROL", "public, max-age=3600")
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -305,6 +310,8 @@ if os.getenv("S3_HOST"):
     bucket_name = os.getenv("S3_BUCKET_NAME", "set-bucket-name")
     public_host = os.getenv("S3_PUBLIC_HOST", "")
 
+    s3_cache_control = os.getenv("S3_CACHE_CONTROL", MEDIA_CACHE_CONTROL)
+
     options = {
         "bucket_name": bucket_name,
         "access_key": os.getenv("S3_KEY_ID", "123"),
@@ -313,6 +320,9 @@ if os.getenv("S3_HOST"):
         "region_name": os.getenv("S3_BUCKET_REGION", "fr"),
         "file_overwrite": False,
         "location": os.getenv("S3_LOCATION", ""),
+        "object_parameters": {
+            "CacheControl": s3_cache_control,
+        },
     }
 
     if public_host:
@@ -465,7 +475,7 @@ WAGTAILMENUS_MAIN_MENUS_EDITABLE_IN_WAGTAILADMIN = False
 WAGTAILDOCS_MAX_UPLOAD_SIZE = int(os.getenv("WAGTAILDOCS_MAX_UPLOAD_SIZE", 10 * 1024 * 1024))  # 10MB
 
 WAGTAILIMAGES_IMAGE_MODEL = "sites_conformes_customimages.CustomImage"
-WAGTAILIMAGES_EXTENSIONS = ["gif", "jpg", "jpeg", "png", "webp", "svg"]
+WAGTAILIMAGES_EXTENSIONS = ["avif", "gif", "jpeg", "jpg", "png", "svg", "webp"]
 WAGTAILDOCS_EXTENSIONS = ["pdf", "docx", "odt", "xlsx", "ods", "pptx", "odp", "csv", "txt"]
 SF_SCHEME_DEPENDENT_SVGS = getenv_bool("SF_SCHEME_DEPENDENT_SVGS", False)
 

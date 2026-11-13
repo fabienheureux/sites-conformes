@@ -1,9 +1,8 @@
 import copy
 import json
-import os
 import sys
 from io import BytesIO
-from pathlib import PosixPath
+from pathlib import Path
 
 import requests
 import swapper
@@ -17,6 +16,7 @@ from wagtail.utils.file import hash_filelike
 
 from sites_conformes.core.constants import HEADER_FIELDS
 from sites_conformes.core.services.accessors import get_or_create_collection, get_or_create_content_page
+from sites_conformes.core.utils import guess_extension
 
 ContentPage = swapper.load_model("sites_conformes_core", "ContentPage")
 
@@ -113,7 +113,7 @@ class ImportPages:
         self,
         pages_data: dict | None = None,
         parent_page_slug: str | None = None,
-        image_folder: PosixPath | None = IMAGES_FOLDER,
+        image_folder: Path | None = IMAGES_FOLDER,
     ) -> None:
         if pages_data is None:
             with open(TEMPLATES_DATA_FILE, "r") as json_file:
@@ -207,7 +207,7 @@ class ImportExportImages:
     Generic class for import/export of a list of Images from a wagtail instance
     """
 
-    def __init__(self, image_ids, source_site=None, image_folder: PosixPath | None = IMAGES_FOLDER) -> None:
+    def __init__(self, image_ids, source_site=None, image_folder: Path | None = IMAGES_FOLDER) -> None:
         self.user = User.objects.filter(is_superuser=True).first()
 
         self.image_ids = set(image_ids)
@@ -215,7 +215,7 @@ class ImportExportImages:
 
         # Create the folder for the files if it doesn't exist
         self.image_folder = image_folder
-        os.makedirs(image_folder, exist_ok=True)
+        image_folder.mkdir(parents=True, exist_ok=True)
 
         self.image_data_file = self.image_folder / "image_data.json"  # type: ignore
 
@@ -225,7 +225,7 @@ class ImportExportImages:
         self.image_data = self.get_image_data()
 
     def get_image_data(self) -> dict:
-        if os.path.isfile(self.image_data_file):
+        if self.image_data_file.is_file():
             with open(self.image_data_file, "r") as json_file:
                 image_data = json.load(json_file)
         else:
@@ -256,7 +256,7 @@ class ImportExportImages:
             # No need to export the pictograms, as they should already be present
             if "Pictogrammes_DSFR" in image_name:
                 pictogram_title = image_name.replace("__", " — ").replace("_", " ")
-                self.image_data[i]["filename"] = pictogram_title
+                self.image_data[i]["filename"] = f"{pictogram_title.removesuffix(".svg")}.svg"
                 self.image_data[i]["is_pictogram"] = True
 
             else:
@@ -276,10 +276,9 @@ class ImportExportImages:
         for i in self.image_ids:
             i = str(i)
             image_data = self.image_data[i]
-            filename = image_data["filename"]
 
             if image_data["is_pictogram"]:
-                pictogram = Image.objects.filter(title=filename).first()
+                pictogram = Image.objects.filter(title=image_data["title"]).first()
                 image_data["local_id"] = pictogram.id
             else:
                 image = self.get_or_create_image(image_data)
@@ -287,7 +286,6 @@ class ImportExportImages:
 
     def get_or_create_image(self, image_data) -> Image:
         filename = image_data["filename"]
-        imported_filename = f"template_image_{filename.lower()}"
         title = image_data["title"]
 
         with open(self.image_folder / filename, "rb") as image_file:
@@ -295,8 +293,13 @@ class ImportExportImages:
 
             image = Image.objects.filter(file_hash=file_hash).first()
             if not image:
+                image_file.seek(0)
+                content = image_file.read()
+                stem = Path(filename.lower()).stem
+                ext = guess_extension(filename, content)
+                imported_filename = f"template_image_{stem}{ext}"
                 image = Image(
-                    file=ImageFile(BytesIO(image_file.read()), name=imported_filename),
+                    file=ImageFile(BytesIO(content), name=imported_filename),
                     title=title,
                     uploaded_by_user=self.user,
                     collection=self.collection,
