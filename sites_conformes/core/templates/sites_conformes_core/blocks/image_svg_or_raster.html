@@ -16,8 +16,8 @@
   </div>
 {% else %}
   {% if alt %}
-    {% picture value.image width-1500 format-webp preserve-svg class=extra_classes alt=alt %}
+    {% picture value.image width-{400,800,1500} format-webp preserve-svg sizes="(min-width: 78em) 1248px, 100vw" loading="lazy" class=extra_classes alt=alt %}
   {% else %}
-    {% picture value.image width-1500 format-webp preserve-svg class=extra_classes %}
+    {% picture value.image width-{400,800,1500} format-webp preserve-svg sizes="(min-width: 78em) 1248px, 100vw" loading="lazy" class=extra_classes %}
   {% endif %}
 {% endif %}

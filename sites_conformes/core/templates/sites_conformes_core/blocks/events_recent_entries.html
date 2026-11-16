@@ -99,7 +99,7 @@
           {% if post.cover %}
             <div class="fr-card__header">
               <div class="fr-card__img">
-                {% picture post.cover width-1200 format-webp preserve-svg class="fr-responsive-img" alt="" %}
+                {% picture post.cover width-{400,800,1200} format-webp preserve-svg sizes="(min-width: 48em) 50vw, 100vw" loading="lazy" class="fr-responsive-img" alt="" %}
               </div>
             </div>
           {% endif %}

@@ -162,7 +162,6 @@ class ImageAndTextItems(blocks.StructBlock):
 
 
 class ImageAndTextListBlock(blocks.ListBlock):
-
     def get_default(self):
         images_titles = [
             "Pictogrammes DSFR — System — Success",
@@ -198,7 +197,11 @@ class ImageAndTextGridSection(BaseSection):
 
         rendered_items = []
         for item in value["items"]:
-            picture = Picture(get_renditions_or_not_found(item["image"], filter_specs)) if item["image"] else None
+            picture = (
+                Picture(get_renditions_or_not_found(item["image"], filter_specs), {"loading": "lazy"})
+                if item["image"]
+                else None
+            )
             rendered_items.append(
                 {
                     "title": item["title"],

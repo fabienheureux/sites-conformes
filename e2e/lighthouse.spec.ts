@@ -10,8 +10,8 @@ const pages = [
 const debuggingPort = 9222
 
 // Lighthouse only gives each image optimization as a message, in English
-// unless another locale is set. Responsive images (srcset) are not done yet:
-// those optimizations are reported on the test without failing it.
+// unless another locale is set. The srcset widths only approach the displayed
+// size: "larger than needed" is reported on the test without failing it.
 const responsiveSize = /larger than it needs to be/
 
 type NetworkRequest = {

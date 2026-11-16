@@ -1,6 +1,10 @@
 {% load static wagtailcore_tags wagtailimages_tags %}
 
 {% image value.image.image fill-1900x650 as bg_img %}
+{# A CSS background image is found late by the browser: ask for it first #}
+{% if value.background_color_or_image == "image" and bg_img %}
+  <link rel="preload" as="image" href="{{ bg_img.url }}" fetchpriority="high">
+{% endif %}
 
 {# djlint: off #}
 <div class="cmsfr-hero fr-container-fluid
