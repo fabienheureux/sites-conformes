@@ -23,6 +23,17 @@
 
     {% dsfr_favicon %}
 
+    {# Found by the browser only once dsfr.css is parsed: ask for the two main weights now #}
+    <link rel="preload"
+          href="{% static "dsfr/dist/fonts/Marianne-Regular.woff2" %}"
+          as="font"
+          type="font/woff2"
+          crossorigin>
+    <link rel="preload"
+          href="{% static "dsfr/dist/fonts/Marianne-Bold.woff2" %}"
+          as="font"
+          type="font/woff2"
+          crossorigin>
     {% dsfr_css %}
     <link href="{% static 'css/style.css' %}" rel="stylesheet" />
 
